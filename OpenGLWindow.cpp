@@ -62,7 +62,9 @@ void OpenGLWindow::initializeGL()
 /*Runs each time we draw*/
 void OpenGLWindow::paintGL()
 {
+	/*glViewport where to start to render(horizontal,vertical, width, height) */
 	glViewport(0, 0, width(), height());
+	/*glDrawArrays (what type of data, wher to start drawing, how many vertices )*/
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	/*glClearColor takes in 4 values between 1 and 0. Where 1 is all the way on and 0 being all the way off. 
