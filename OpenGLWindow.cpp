@@ -10,8 +10,6 @@
 
 #include <StatusCheck.h>
 
-//FileReader shadercode;
-
 using namespace std;
 
 void sendDatatoOpenGL(){
@@ -21,13 +19,13 @@ void sendDatatoOpenGL(){
 	/*Glfloat is OpenGLs float*/
 	GLfloat  vertices[] =
 	{
-		/*First 2 is Position, Next 3 is the RGB Color RED, GREEN, BLUE*/
-		+1.0f, +0.0f, +1.0f, +0.0f, +0.0f, //vertice 0
-		+0.0f, +1.0f, +0.0f, +1.0f, +0.0f, //vertice 1  
-		+0.0f, -1.0f, +0.0f, +0.0f, +1.0f, //vertice 2
-		-1.0f, +0.0f, +1.0f, +0.0f, +0.0f, //vertice 3
-										   //+0.0f, -1.0f, +0.0, +0.0, +0.0, //vertice 4 Er lik vertice 2 
-										   //+0.0f, +1.0f, +0.0, +0.0, +0.0,//vertice 5 Er lik vertice 1
+		/*First 3 is Position(X,Y,Z),Next 3 is the RGB Color RED, GREEN, BLUE*/
+		-1.0f, +1.0f, -0.99f, +0.0f, +0.0f, +1.0f, //vertice 0
+		+0.0f, -1.0f, -0.99f, +0.0f, +0.0f, +1.0f, //vertice 1  
+		+1.0f, +1.0f, -0.99f, +0.0f, +0.0f, +1.0f, //vertice 2
+		-1.0f, -1.0f, +0.99f, +1.0f, +0.0f, +0.0f, //vertice 3
+		+1.0f, -1.0f, +0.99f, +1.0f, +0.0f, +0.0f, //vertice 4 
+		+0.0f, +1.0f, +0.99f, +1.0f, +0.0f, +0.0f, //vertice 5 
 	};
 
 	/*Copies the vertices to the GPU we create a buffer object*/
@@ -44,11 +42,11 @@ void sendDatatoOpenGL(){
 	/*glEnableVertexAttribArray = 0. Zero desribes (posision)*/
 	glEnableVertexAttribArray(0);
 	/*glVertexAttribPointer describs the data(Attributs, Floats per verteks, what type of data, what to do with the data, Distens in bytes between the vertecs attributs,)*/
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, 0);
 	/*glEnableVertexAttribArray = 1. Zero desribes (color)*/
 	glEnableVertexAttribArray(1);
 	/*glVertexAttribPointer describs the data*/						//most be sendt in as a pointer
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (char*)(sizeof(float) * 2));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (char*)(sizeof(float) * 3));
 
 	/*Max value of an unsigned byte GLubyte = 255*/
 	/*Max value of an unsigned short GLushort = 65,535*/
@@ -56,7 +54,7 @@ void sendDatatoOpenGL(){
 
 	GLushort shapes[] =
 	{
-		3,2,1, 0,1,2
+		 0,1,2, 3,4,5,
 	};
 
 	/*GLuint creates a buffer name/ID*/
@@ -110,6 +108,7 @@ void OpenGLWindow::initializeGL()
 {
 	/*Sets up the function pointer to all the GLfuntions and returns an error code*/
 	glewInit();
+	glEnable(GL_DEPTH_TEST);
 	sendDatatoOpenGL();
 	installShaders();
 }
@@ -117,6 +116,8 @@ void OpenGLWindow::initializeGL()
 /*Runs each time we draw*/
 void OpenGLWindow::paintGL()
 {
+
+	
 	/*glViewport where to start to render(horizontal,vertical, width, height) */
 	glViewport(0, 0, width(), height());
 	/*glDrawArrays (what type of data, wher to start drawing, how many vertices )*/
@@ -127,7 +128,7 @@ void OpenGLWindow::paintGL()
 	//glClearColor(1, 0, 0, 1);
 	
 	/*glClear clears the GL_COLOR_BUFFER_BIT each frame*/
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
 	/*glDrawElements*/
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
