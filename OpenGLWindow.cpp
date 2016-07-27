@@ -1,10 +1,14 @@
 /*Using glew to glew likes to be the first libery to be initialized */
 #include <gl\glew.h>
+/*Using input output stream*/
+#include <iostream>
+/*Using to read from file*/
+#include <fstream>
 /*Using to acces the <OpenGLWindow.h> libery*/
 #include <OpenGLWindow.h>
+#include <filesystem>
 
-extern const char* vertexShaderCode;
-extern const char* fragmentShaderCode;
+using namespace std;
 
 void sendDatatoOpenGL(){
 	/*OpenGL Coordinate system works as 0.0, 0.0 is in the center, +1.0 , +1.0 is in the top right corner
@@ -15,8 +19,8 @@ void sendDatatoOpenGL(){
 	{
 		/*First 2 is Position, Next 3 is the RGB Color RED, GREEN, BLUE*/
 		+1.0f, +0.0f, +1.0f, +0.0f, +0.0f, //vertice 0
-		+0.0f, +1.0f, +1.0f, +0.0f, +0.0f, //vertice 1  
-		+0.0f, -1.0f, +1.0f, +0.0f, +0.0f, //vertice 2
+		+0.0f, +1.0f, +0.0f, +1.0f, +0.0f, //vertice 1  
+		+0.0f, -1.0f, +0.0f, +0.0f, +1.0f, //vertice 2
 		-1.0f, +0.0f, +1.0f, +0.0f, +0.0f, //vertice 3
 										   //+0.0f, -1.0f, +0.0, +0.0, +0.0, //vertice 4 Er lik vertice 2 
 										   //+0.0f, +1.0f, +0.0, +0.0, +0.0,//vertice 5 Er lik vertice 1
@@ -62,26 +66,108 @@ void sendDatatoOpenGL(){
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(shapes), shapes, GL_STATIC_DRAW);
 }
 
+bool checkStatus(GLuint objectID,
+	PFNGLGETSHADERIVPROC objectPropertyGetterFunc,
+	PFNGLGETSHADERINFOLOGPROC getInfoLogFunc,
+	GLenum statusType)
+{
+	GLint status;
+	objectPropertyGetterFunc(objectID, statusType, &status);
+	if(status != GL_TRUE)
+	{
+		GLint infoLogLength;
+		objectPropertyGetterFunc(objectID, GL_INFO_LOG_LENGTH, &infoLogLength);
+		GLchar* buffer = new GLchar[infoLogLength];
+
+		GLsizei bufferSize;
+		getInfoLogFunc(objectID, infoLogLength, &bufferSize, buffer);
+		cout << buffer << endl;
+		delete [] buffer;
+		return false;
+	}
+	return true;
+}
+	
+bool checkShaderStatus(GLuint shaderID){
+	return checkStatus(shaderID, glGetShaderiv, glGetShaderInfoLog, GL_COMPILE_STATUS);
+	GLint compileStatus;
+	glGetShaderiv(shaderID, GL_COMPILE_STATUS, &compileStatus);
+	if (compileStatus != GL_TRUE)
+	{
+		GLint infoLogLength;
+		glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
+		GLchar* buffer = new GLchar[infoLogLength];
+
+		GLsizei bufferSize;
+		glGetShaderInfoLog(shaderID, infoLogLength, &bufferSize, buffer);
+		cout << buffer << endl;
+		delete[] buffer;
+		return false;
+	}
+	return true;
+}
+
+bool checkProgramStatus(GLuint programID){
+	return checkStatus(programID, glGetProgramiv, glGetProgramInfoLog, GL_LINK_STATUS);
+	GLint linkStatus;
+	glGetProgramiv(programID, GL_LINK_STATUS, &linkStatus);
+	if(linkStatus != GL_TRUE)
+	{
+		GLint infoLogLength;
+		glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &infoLogLength);
+		GLchar* buffer = new GLchar[infoLogLength];
+
+		GLsizei bufferSize;
+		glGetProgramInfoLog(programID, infoLogLength, &bufferSize, buffer);
+		cout << buffer << endl;
+		delete [] buffer;
+		return false;
+	}
+	return true;
+	
+}
+	
+string readShaderCode(const char* fileName)
+{
+	ifstream input(fileName);
+	if( ! input.good())
+	{
+		cout << "File failed to load..." << fileName;
+		exit(1);
+	}
+	return std::string(
+		std::istreambuf_iterator<char>(input),
+		std::istreambuf_iterator<char>());
+}
 
 void installShaders()
 {
 	GLuint vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
 	GLuint fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
 
-	const char* adapter[1];
-	adapter[0] = vertexShaderCode;
+	const GLchar* adapter[1];
+	string temporary = readShaderCode("VertexShader.glsl");
+	adapter[0] = temporary.c_str();
 	glShaderSource(vertexShaderID, 1, adapter, 0);
-	adapter[0] = fragmentShaderCode;
+	temporary = readShaderCode("FragmentShader.glsl");
+	adapter[0] = temporary.c_str();
 	glShaderSource(fragmentShaderID, 1, adapter, 0);
 
 	glCompileShader(vertexShaderID);
 	glCompileShader(fragmentShaderID);
+
+	if (!checkShaderStatus(vertexShaderID) || !checkShaderStatus(fragmentShaderID))
+		return;
+
 
 	GLuint programID = glCreateProgram();
 	glAttachShader(programID, vertexShaderID);
 	glAttachShader(programID, fragmentShaderID);
 	glLinkProgram(programID);
 	
+	if (!checkProgramStatus(programID))
+		return;
+
 	glUseProgram(programID);
 }
 

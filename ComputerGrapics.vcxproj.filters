@@ -3,9 +3,12 @@
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="OpenGLWindow.cpp" />
-    <ClCompile Include="Shadercode.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="OpenGLWindow.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="VertexShader.glsl" />
+    <None Include="FragmentShader.glsl" />
   </ItemGroup>
 </Project>
