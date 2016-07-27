@@ -2,11 +2,14 @@
 #include <gl\glew.h>
 /*Using input output stream*/
 #include <iostream>
-/*Using to read from file*/
-#include <fstream>
 /*Using to acces the <OpenGLWindow.h> libery*/
 #include <OpenGLWindow.h>
-#include <filesystem>
+
+//#include <filesystem>
+#include <FileReader.h>
+
+
+//FileReader shadercode;
 
 using namespace std;
 
@@ -127,29 +130,41 @@ bool checkProgramStatus(GLuint programID){
 	
 }
 	
-string readShaderCode(const char* fileName)
-{
-	ifstream input(fileName);
-	if( ! input.good())
-	{
-		cout << "File failed to load..." << fileName;
-		exit(1);
-	}
-	return std::string(
-		std::istreambuf_iterator<char>(input),
-		std::istreambuf_iterator<char>());
-}
+//string readShaderCode(const char* fileName)
+//{
+//	ifstream input(fileName);
+//	if( ! input.good())
+//	{
+//		cout << "File failed to load..." << fileName;
+//		exit(1);
+//	}
+//	return std::string(
+//		std::istreambuf_iterator<char>(input),
+//		std::istreambuf_iterator<char>());
+//}
+
+//string FileReader::readShaderCode(const char* filename)
+//{
+//	ifstream input(filename);
+//	return std::string(
+//		std::istreambuf_iterator<char>(input),
+//		std::istreambuf_iterator<char>());
+//}
+
+
 
 void installShaders()
 {
+
+
 	GLuint vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
 	GLuint fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
 
 	const GLchar* adapter[1];
-	string temporary = readShaderCode("VertexShader.glsl");
+	string temporary = FileReader::readShaderCode("VertexShader.glsl");
 	adapter[0] = temporary.c_str();
 	glShaderSource(vertexShaderID, 1, adapter, 0);
-	temporary = readShaderCode("FragmentShader.glsl");
+	temporary = FileReader::readShaderCode("FragmentShader.glsl");
 	adapter[0] = temporary.c_str();
 	glShaderSource(fragmentShaderID, 1, adapter, 0);
 

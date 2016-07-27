@@ -150,10 +150,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="FileReader.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="OpenGLWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="FileReader.h" />
     <ClInclude Include="OpenGLWindow.h" />
   </ItemGroup>
   <ItemGroup>
