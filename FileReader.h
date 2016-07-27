@@ -2,14 +2,11 @@
 #define FILE_READER
 
 #include <string>
-class FileReader
-{
-public:
 
-	static std::string readShaderCode(const char* filename);
+class FileReader{
+
+	public:
+		static std::string readShaderCode(const char* filename);
 
 };
-
-
-
 #endif

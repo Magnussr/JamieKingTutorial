@@ -8,6 +8,7 @@
 //#include <filesystem>
 #include <FileReader.h>
 
+#include <StatusCheck.h>
 
 //FileReader shadercode;
 
@@ -68,91 +69,7 @@ void sendDatatoOpenGL(){
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shapeBufferID);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(shapes), shapes, GL_STATIC_DRAW);
 }
-
-bool checkStatus(GLuint objectID,
-	PFNGLGETSHADERIVPROC objectPropertyGetterFunc,
-	PFNGLGETSHADERINFOLOGPROC getInfoLogFunc,
-	GLenum statusType)
-{
-	GLint status;
-	objectPropertyGetterFunc(objectID, statusType, &status);
-	if(status != GL_TRUE)
-	{
-		GLint infoLogLength;
-		objectPropertyGetterFunc(objectID, GL_INFO_LOG_LENGTH, &infoLogLength);
-		GLchar* buffer = new GLchar[infoLogLength];
-
-		GLsizei bufferSize;
-		getInfoLogFunc(objectID, infoLogLength, &bufferSize, buffer);
-		cout << buffer << endl;
-		delete [] buffer;
-		return false;
-	}
-	return true;
-}
 	
-bool checkShaderStatus(GLuint shaderID){
-	return checkStatus(shaderID, glGetShaderiv, glGetShaderInfoLog, GL_COMPILE_STATUS);
-	GLint compileStatus;
-	glGetShaderiv(shaderID, GL_COMPILE_STATUS, &compileStatus);
-	if (compileStatus != GL_TRUE)
-	{
-		GLint infoLogLength;
-		glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
-		GLchar* buffer = new GLchar[infoLogLength];
-
-		GLsizei bufferSize;
-		glGetShaderInfoLog(shaderID, infoLogLength, &bufferSize, buffer);
-		cout << buffer << endl;
-		delete[] buffer;
-		return false;
-	}
-	return true;
-}
-
-bool checkProgramStatus(GLuint programID){
-	return checkStatus(programID, glGetProgramiv, glGetProgramInfoLog, GL_LINK_STATUS);
-	GLint linkStatus;
-	glGetProgramiv(programID, GL_LINK_STATUS, &linkStatus);
-	if(linkStatus != GL_TRUE)
-	{
-		GLint infoLogLength;
-		glGetProgramiv(programID, GL_INFO_LOG_LENGTH, &infoLogLength);
-		GLchar* buffer = new GLchar[infoLogLength];
-
-		GLsizei bufferSize;
-		glGetProgramInfoLog(programID, infoLogLength, &bufferSize, buffer);
-		cout << buffer << endl;
-		delete [] buffer;
-		return false;
-	}
-	return true;
-	
-}
-	
-//string readShaderCode(const char* fileName)
-//{
-//	ifstream input(fileName);
-//	if( ! input.good())
-//	{
-//		cout << "File failed to load..." << fileName;
-//		exit(1);
-//	}
-//	return std::string(
-//		std::istreambuf_iterator<char>(input),
-//		std::istreambuf_iterator<char>());
-//}
-
-//string FileReader::readShaderCode(const char* filename)
-//{
-//	ifstream input(filename);
-//	return std::string(
-//		std::istreambuf_iterator<char>(input),
-//		std::istreambuf_iterator<char>());
-//}
-
-
-
 void installShaders()
 {
 
@@ -171,7 +88,7 @@ void installShaders()
 	glCompileShader(vertexShaderID);
 	glCompileShader(fragmentShaderID);
 
-	if (!checkShaderStatus(vertexShaderID) || !checkShaderStatus(fragmentShaderID))
+	if (!StatusCheck::checkShaderStatus(vertexShaderID) || !StatusCheck::checkShaderStatus(fragmentShaderID))
 		return;
 
 
@@ -180,14 +97,11 @@ void installShaders()
 	glAttachShader(programID, fragmentShaderID);
 	glLinkProgram(programID);
 	
-	if (!checkProgramStatus(programID))
+	if (!StatusCheck::checkProgramStatus(programID))
 		return;
 
 	glUseProgram(programID);
 }
-
-
-
 
 /*initializeGl runs only once during the duration of the window
 That is why it's god to give the vertices her so the GPU only get the vertices once*/
@@ -198,8 +112,6 @@ void OpenGLWindow::initializeGL()
 	glewInit();
 	sendDatatoOpenGL();
 	installShaders();
-
-
 }
 
 /*Runs each time we draw*/
