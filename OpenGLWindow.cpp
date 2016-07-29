@@ -4,30 +4,20 @@
 #include <iostream>
 /*Using to acces the <OpenGLWindow.h> libery*/
 #include <OpenGLWindow.h>
-
-//#include <filesystem>
+#include <glm\glm.hpp>
+#include <Vertex.h>
+#include <ShapeGenerator.h>
 #include <FileReader.h>
-
 #include <StatusCheck.h>
 
-using namespace std;
+GLuint programID;
 
 void sendDatatoOpenGL(){
-	/*OpenGL Coordinate system works as 0.0, 0.0 is in the center, +1.0 , +1.0 is in the top right corner
-	and -1.0, -1.0 is in the button right corner. */
+
+	ShapeData tri = ShapeGenerator::makeTriangle();
 
 	/*Glfloat is OpenGLs float*/
-	GLfloat  vertices[] =
-	{
-		/*First 3 is Position(X,Y,Z),Next 3 is the RGB Color RED, GREEN, BLUE*/
-		-1.0f, +1.0f, -0.99f, +0.0f, +0.0f, +1.0f, //vertice 0
-		+0.0f, -1.0f, -0.99f, +0.0f, +0.0f, +1.0f, //vertice 1  
-		+1.0f, +1.0f, -0.99f, +0.0f, +0.0f, +1.0f, //vertice 2
-		-1.0f, -1.0f, +0.99f, +1.0f, +0.0f, +0.0f, //vertice 3
-		+1.0f, -1.0f, +0.99f, +1.0f, +0.0f, +0.0f, //vertice 4 
-		+0.0f, +1.0f, +0.99f, +1.0f, +0.0f, +0.0f, //vertice 5 
-	};
-
+	
 	/*Copies the vertices to the GPU we create a buffer object*/
 
 	/*GLuint creates a buffer name/ID*/
@@ -38,7 +28,7 @@ void sendDatatoOpenGL(){
 	/*glBindBuffer binds verticesBufferID to a bufferbindingpoint.(the type of bufferbindingpoint, ID of the bufferObject)*/
 	glBindBuffer(GL_ARRAY_BUFFER, verticesBufferID);
 	/*glBufferData sends the data down to the GPU and tells it how the data looks(where to send the data,the sizeof data,The address of the data,what to do with the data)*/
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, tri.vertexBufferSize(), tri.vertices, GL_STATIC_DRAW);
 	/*glEnableVertexAttribArray = 0. Zero desribes (posision)*/
 	glEnableVertexAttribArray(0);
 	/*glVertexAttribPointer describs the data(Attributs, Floats per verteks, what type of data, what to do with the data, Distens in bytes between the vertecs attributs,)*/
@@ -52,11 +42,6 @@ void sendDatatoOpenGL(){
 	/*Max value of an unsigned short GLushort = 65,535*/
 	/*Max value of an unsigned int GLuint = 4,294,967,295*/
 
-	GLushort shapes[] =
-	{
-		 0,1,2, 3,4,5,
-	};
-
 	/*GLuint creates a buffer name/ID*/
 	GLuint shapeBufferID;
 
@@ -65,18 +50,44 @@ void sendDatatoOpenGL(){
 
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shapeBufferID);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(shapes), shapes, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, tri.indexBufferSize() , tri.indices , GL_STATIC_DRAW);
+	tri.cleanup();
 }
 	
-void installShaders()
-{
+/*Runs each time we draw*/
+void OpenGLWindow::paintGL() {
 
+	/*glClear clears the GL_DEPTH_BUFFER_BIT and GL_COLOR_BUFFER_BIT each frame*/
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+	/*glViewport where to start to render(horizontal,vertical, width, height) */
+	glViewport(0, 0, width(), height());
+
+	glm::vec3 dominatingColor(5.0f, 5.0f, 0.5f);
+	GLint dominatingColorUniformLOcater = glGetUniformLocation(programID, "dominatingColor");
+	glUniform3fv(dominatingColorUniformLOcater, 1, &dominatingColor[0]);
+
+
+
+
+	/*glDrawArrays (what type of data, wher to start drawing, how many vertices )*/
+	//glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	/*glClearColor takes in 4 values between 1 and 0. Where 1 is all the way on and 0 being all the way off.
+	First is Red, Secund is Green, Theird is Blue and the Fourt is the transparency*/
+	//glClearColor(1, 0, 0, 1);
+
+	/*glDrawElements*/
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
+}
+
+void installShaders(){
 
 	GLuint vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
 	GLuint fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
 
 	const GLchar* adapter[1];
-	string temporary = FileReader::readShaderCode("VertexShader.glsl");
+	std::string temporary = FileReader::readShaderCode("VertexShader.glsl");
 	adapter[0] = temporary.c_str();
 	glShaderSource(vertexShaderID, 1, adapter, 0);
 	temporary = FileReader::readShaderCode("FragmentShader.glsl");
@@ -89,8 +100,7 @@ void installShaders()
 	if (!StatusCheck::checkShaderStatus(vertexShaderID) || !StatusCheck::checkShaderStatus(fragmentShaderID))
 		return;
 
-
-	GLuint programID = glCreateProgram();
+	programID = glCreateProgram();
 	glAttachShader(programID, vertexShaderID);
 	glAttachShader(programID, fragmentShaderID);
 	glLinkProgram(programID);
@@ -104,34 +114,11 @@ void installShaders()
 /*initializeGl runs only once during the duration of the window
 That is why it's god to give the vertices her so the GPU only get the vertices once*/
 
-void OpenGLWindow::initializeGL()
-{
+void OpenGLWindow::initializeGL(){
+
 	/*Sets up the function pointer to all the GLfuntions and returns an error code*/
 	glewInit();
 	glEnable(GL_DEPTH_TEST);
 	sendDatatoOpenGL();
 	installShaders();
 }
-
-/*Runs each time we draw*/
-void OpenGLWindow::paintGL()
-{
-
-	
-	/*glViewport where to start to render(horizontal,vertical, width, height) */
-	glViewport(0, 0, width(), height());
-	/*glDrawArrays (what type of data, wher to start drawing, how many vertices )*/
-	//glDrawArrays(GL_TRIANGLES, 0, 6);
-
-	/*glClearColor takes in 4 values between 1 and 0. Where 1 is all the way on and 0 being all the way off. 
-	First is Red, Secund is Green, Theird is Blue and the Fourt is the transparency*/
-	//glClearColor(1, 0, 0, 1);
-	
-	/*glClear clears the GL_COLOR_BUFFER_BIT each frame*/
-	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-
-	/*glDrawElements*/
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
-}
-
-

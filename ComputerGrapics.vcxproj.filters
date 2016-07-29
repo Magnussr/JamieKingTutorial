@@ -5,14 +5,31 @@
     <ClCompile Include="OpenGLWindow.cpp" />
     <ClCompile Include="FileReader.cpp" />
     <ClCompile Include="StatusCheck.cpp" />
+    <ClCompile Include="ShapeGenerator.cpp">
+      <Filter>Primitives</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="OpenGLWindow.h" />
     <ClInclude Include="FileReader.h" />
     <ClInclude Include="StatusCheck.h" />
+    <ClInclude Include="Vertex.h">
+      <Filter>Primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="ShapeData.h">
+      <Filter>Primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="ShapeGenerator.h">
+      <Filter>Primitives</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="VertexShader.glsl" />
     <None Include="FragmentShader.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Primitives">
+      <UniqueIdentifier>{2850c245-91c1-413d-b207-e161cc59b2aa}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>
