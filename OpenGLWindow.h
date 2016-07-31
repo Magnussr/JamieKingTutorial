@@ -16,7 +16,7 @@ protected:
 	void paintGL();
 /*public functions can be used by all classes*/
 public:
-	
+	~OpenGLWindow();
 };
 /*Ends the HEADER GUARDS*/
 #endif

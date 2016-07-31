@@ -5,16 +5,27 @@
 /*Using to acces the <OpenGLWindow.h> libery*/
 #include <OpenGLWindow.h>
 #include <glm\glm.hpp>
+#include <glm\gtc\matrix_transform.hpp>
+#include <glm\gtx\transform.hpp>
 #include <Vertex.h>
 #include <ShapeGenerator.h>
 #include <FileReader.h>
 #include <StatusCheck.h>
 
+using namespace std;
+using glm::vec3;
+using glm::mat4;
+
+const uint NUM_VERTICES_PER_TRI = 3;
+const uint NUM_FLOATS_PER_VERTICE = 6;
+const uint VERTEX_BYTE_SIZE = NUM_FLOATS_PER_VERTICE * sizeof(float);
+
 GLuint programID;
+GLuint numIndices;
 
 void sendDatatoOpenGL(){
 
-	ShapeData tri = ShapeGenerator::makeTriangle();
+	ShapeData shape = ShapeGenerator::makeCube();
 
 	/*Glfloat is OpenGLs float*/
 	
@@ -28,7 +39,7 @@ void sendDatatoOpenGL(){
 	/*glBindBuffer binds verticesBufferID to a bufferbindingpoint.(the type of bufferbindingpoint, ID of the bufferObject)*/
 	glBindBuffer(GL_ARRAY_BUFFER, verticesBufferID);
 	/*glBufferData sends the data down to the GPU and tells it how the data looks(where to send the data,the sizeof data,The address of the data,what to do with the data)*/
-	glBufferData(GL_ARRAY_BUFFER, tri.vertexBufferSize(), tri.vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, shape.vertexBufferSize(), shape.vertices, GL_STATIC_DRAW);
 	/*glEnableVertexAttribArray = 0. Zero desribes (posision)*/
 	glEnableVertexAttribArray(0);
 	/*glVertexAttribPointer describs the data(Attributs, Floats per verteks, what type of data, what to do with the data, Distens in bytes between the vertecs attributs,)*/
@@ -50,8 +61,9 @@ void sendDatatoOpenGL(){
 
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shapeBufferID);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, tri.indexBufferSize() , tri.indices , GL_STATIC_DRAW);
-	tri.cleanup();
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, shape.indexBufferSize() , shape.indices , GL_STATIC_DRAW);
+	numIndices = shape.numIndices;
+	shape.cleanup();
 }
 	
 /*Runs each time we draw*/
@@ -63,9 +75,33 @@ void OpenGLWindow::paintGL() {
 	/*glViewport where to start to render(horizontal,vertical, width, height) */
 	glViewport(0, 0, width(), height());
 
-	glm::vec3 dominatingColor(5.0f, 5.0f, 0.5f);
+	GLint fullTransformMatrixUniformLocation = glGetUniformLocation(programID, "fullTransformMatrix");
+
+	mat4 fullTransformMatrix;
+
+	/* Thired         Second      First    * Vertex*/  
+	/*projection * translation * rotation  * Vertex*/
+
+	glm::mat4 projectionMatrix = glm::perspective(60.0f, ((float)width()) / height(), 1.0f, 10.0f);
+
+	
+	/*Cube 1*/
+
+	glm::mat4 translationMatrix = glm::translate(vec3(-1.0f, 0.0f, -3.0f));
+	/*The rotationMatrix is used to rotate the object(It's a 4x4 Matrix, THe Degress you want to rotate, 3x3 Vector(That thakes inn 3 values(X, Y, Z))) */
+	glm::mat4 rotationMatrix = glm::rotate(36.0f, vec3(1.0f, 0.0f, 0.0f));
+
+	
+
+	
+
+	fullTransformMatrix = projectionMatrix * translationMatrix * rotationMatrix;
+	/*Sends the fullTransformMatrix in to the VertexShader*/
+	glUniformMatrix4fv(fullTransformMatrixUniformLocation, 1, GL_FALSE, &fullTransformMatrix[0][0]);
+	
+	/*glm::vec3 dominatingColor(5.0f, 5.0f, 0.5f);
 	GLint dominatingColorUniformLOcater = glGetUniformLocation(programID, "dominatingColor");
-	glUniform3fv(dominatingColorUniformLOcater, 1, &dominatingColor[0]);
+	glUniform3fv(dominatingColorUniformLOcater, 1, &dominatingColor[0]);*/
 
 
 
@@ -78,7 +114,21 @@ void OpenGLWindow::paintGL() {
 	//glClearColor(1, 0, 0, 1);
 
 	/*glDrawElements*/
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
+	glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_SHORT, 0);
+
+	/*Cube 2*/
+
+	translationMatrix = glm::translate(glm::vec3(1.0f, 0.0f, -3.75f));
+	/*The rotationMatrix is used to rotate the object(It's a 4x4 Matrix, THe Degress you want to rotate, 3x3 Vector(That thakes inn 3 values(X, Y, Z))) */
+	rotationMatrix = glm::rotate(126.0f, vec3(0.0f, 1.0f, 0.0f));
+
+	fullTransformMatrix = projectionMatrix * translationMatrix * rotationMatrix;
+	/*Sends the fullTransformMatrix in to the VertexShader*/
+	glUniformMatrix4fv(fullTransformMatrixUniformLocation, 1, GL_FALSE, &fullTransformMatrix[0][0]);
+
+	/*glDrawElements*/
+	glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_SHORT, 0);
+
 }
 
 void installShaders(){
@@ -108,17 +158,29 @@ void installShaders(){
 	if (!StatusCheck::checkProgramStatus(programID))
 		return;
 
+	glDeleteShader(vertexShaderID);
+	glDeleteShader(fragmentShaderID);
+
 	glUseProgram(programID);
+
+
 }
+
 
 /*initializeGl runs only once during the duration of the window
 That is why it's god to give the vertices her so the GPU only get the vertices once*/
 
 void OpenGLWindow::initializeGL(){
 
+
 	/*Sets up the function pointer to all the GLfuntions and returns an error code*/
 	glewInit();
 	glEnable(GL_DEPTH_TEST);
 	sendDatatoOpenGL();
 	installShaders();
+}
+OpenGLWindow::~OpenGLWindow()
+{
+	glUseProgram(0);
+	glDeleteProgram(programID);
 }
