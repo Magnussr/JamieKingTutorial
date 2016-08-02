@@ -14,6 +14,8 @@ protected:
 	void initializeGL();
 	/*funtion Qt calls whenevery it expect rendering or drawing calling commands*/
 	void paintGL();
+	void mouseMoveEvent(QMouseEvent*);
+	void keyPressEvent(QKeyEvent*);
 /*public functions can be used by all classes*/
 public:
 	~OpenGLWindow();

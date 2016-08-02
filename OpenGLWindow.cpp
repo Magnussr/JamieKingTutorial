@@ -2,6 +2,8 @@
 #include <gl\glew.h>
 /*Using input output stream*/
 #include <iostream>
+#include <QtGui\qmouseevent>
+#include <QtGui\qkeyevent>
 /*Using to acces the <OpenGLWindow.h> libery*/
 #include <OpenGLWindow.h>
 #include <glm\glm.hpp>
@@ -11,6 +13,7 @@
 #include <ShapeGenerator.h>
 #include <FileReader.h>
 #include <StatusCheck.h>
+#include <Camera.h>
 
 using namespace std;
 using glm::vec3;
@@ -22,6 +25,7 @@ const uint VERTEX_BYTE_SIZE = NUM_FLOATS_PER_VERTICE * sizeof(float);
 
 GLuint programID;
 GLuint numIndices;
+Camera camera;
 
 void sendDatatoOpenGL(){
 
@@ -131,6 +135,36 @@ void OpenGLWindow::paintGL() {
 
 }
 
+void OpenGLWindow::mouseMoveEvent(QMouseEvent* e){
+	camera.mouseUpdate(glm::vec2(e->x(), e->y()));
+	repaint();
+}
+
+void OpenGLWindow::keyPressEvent(QKeyEvent* e){
+
+	switch (e->key()){
+	case Qt::Key_W:
+		camera.moveForward();
+		break;
+	case Qt::Key_S:
+		camera.moveBackward();
+		break;
+	case Qt::Key_A:
+		camera.strafeLeft();
+		break;
+	case Qt::Key_D:
+		camera.strafeRight();
+		break;
+	case Qt::Key_R:
+		camera.moveUp();
+		break;
+	case Qt::Key_F:
+		camera.moveDown();
+		break;
+	}
+	repaint();
+	
+}
 void installShaders(){
 
 	GLuint vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
@@ -181,6 +215,7 @@ void OpenGLWindow::initializeGL(){
 }
 OpenGLWindow::~OpenGLWindow()
 {
+	//glDeleteBuffers(1, &theBufferID);
 	glUseProgram(0);
 	glDeleteProgram(programID);
 }
